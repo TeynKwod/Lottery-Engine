@@ -1,0 +1,61 @@
+#pragma once
+
+#include <QMainWindow>
+#include <chrono>
+#include <optional>
+
+#include "customrandom.h"
+#include "enums.h"
+
+struct Participant {
+    Participant() = default;
+    Participant(QString str_part);
+
+    QString GetElement(size_t index) const;
+
+    QString id, name, surname, nick;
+    std::chrono::system_clock::time_point time;
+};
+
+class Model {
+public:
+    Model() = default;
+
+    QString ValueNameByIndex(int) const;
+
+    size_t NumberOfParticipants(bool) const;
+    Participant GetParticipant(size_t, bool) const;
+
+    void AddParticipant(Participant part) {
+        participants_.push_back(part);
+    }
+
+    std::unique_ptr<CustomRandom> GetRandomizer() {
+        return std::unique_ptr<CustomRandom>(&randomizer_);
+    }
+
+    void GenerateTestParticipants(int);
+    void ReadFromFile(QString);
+    std::vector<Participant*> CopyParticipantPtr();
+    void GenerateWinners(size_t);
+    void FindParticipants(QString, SearchType);
+
+    void SetNextIterator();
+    void SetPrevIterator();
+    std::optional<std::vector<Participant>::iterator> GetIterator() {
+        return iterator_;
+    }
+    std::vector<Participant>::iterator GetBeginIterator() {
+        return participants_.begin();
+    }
+
+    QString GetParticipantsString();
+    QString GetActiveParticipantsString();
+
+private:
+    CustomRandom randomizer_;
+    std::optional<std::vector<Participant>::iterator> iterator_;
+    std::vector<Participant> participants_;
+    std::vector<Participant*> active_part_;
+    size_t current_active_index_{ 0 };
+};
