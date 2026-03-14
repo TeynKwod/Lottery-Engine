@@ -26,12 +26,13 @@ void MainWindow::ApplyModel() {
     ui->btn_search->setEnabled(participants_filled);
     ui->btn_to_clipboard->setEnabled(participants_filled);
     ui->btn_write_file->setEnabled(participants_filled);
+    ui->btn_add_part->setEnabled(participants_filled && (model_.GetIterator() != std::nullopt));
 
     bool active_part_filled = model_.NumberOfParticipants(true) > 0;
     ui->rbtn_active_part->setEnabled(active_part_filled);
     ui->rbtn_active_work->setEnabled(active_part_filled);
-    ui->btn_next_active->setEnabled(active_part_filled & !show_active_part_);
-    ui->btn_prev_active->setEnabled(active_part_filled & !show_active_part_);
+    ui->btn_next_active->setEnabled(active_part_filled && !show_active_part_);
+    ui->btn_prev_active->setEnabled(active_part_filled && !show_active_part_);
 
     if (table_view_) {
         ui->tbl_participants->clearContents();
@@ -44,11 +45,12 @@ void MainWindow::ApplyModel() {
             }
         }
 
-        if (model_.GetIterator() != std::nullopt) {
+        if (model_.GetIterator().has_value()) {
             ui->tbl_participants->selectRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
         }
     }
     else {
+        applying_model_ = true;
         ui->lst_participants->clear();
 
         for (size_t i = 0; i < model_.NumberOfParticipants(show_active_part_); ++i) {
@@ -63,13 +65,19 @@ void MainWindow::ApplyModel() {
             ui->lst_participants->addItem(part_str);
         }
 
-        if (model_.GetIterator() != std::nullopt) {
+        if (model_.GetIterator().has_value()) {
             ui->lst_participants->setCurrentRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
         }
+
+        applying_model_ = false;
     }
 }
 
 QString MainWindow::ItemsToString(QList<QTableWidgetItem*> items) {
+    if (items.size() == 1) {
+        return items[0]->text();
+    }
+
     QString result;
     for (QTableWidgetItem* item : items) {
         result += model_.ValueNameByIndex(item->column()) + item->text() + " ";
@@ -94,6 +102,30 @@ void MainWindow::on_act_show_tbl_triggered()
     ui->lst_participants->hide();
     ui->tbl_participants->show();
     ApplyModel();
+}
+
+
+void MainWindow::on_act_imp_clipboard_triggered()
+{
+    on_btn_from_clipboard_clicked();
+}
+
+
+void MainWindow::on_act_imp_file_triggered()
+{
+    on_btn_read_file_clicked();
+}
+
+
+void MainWindow::on_act_exp_clipboard_triggered()
+{
+    on_btn_to_clipboard_clicked();
+}
+
+
+void MainWindow::on_act_exp_file_triggered()
+{
+    on_btn_write_file_clicked();
 }
 
 #define ActionsSlots_end }
@@ -194,6 +226,13 @@ void MainWindow::on_btn_prev_active_clicked()
 }
 
 
+void MainWindow::on_btn_add_part_clicked()
+{
+    model_.AddActiveParticipant();
+    ApplyModel();
+}
+
+
 void MainWindow::on_btn_random_prng_clicked()
 {
     randomizer_ptr_->SetTimeBasedSeed();
@@ -280,8 +319,25 @@ void MainWindow::on_btn_to_clipboard_clicked()
 
 void MainWindow::on_btn_gen_participants_clicked()
 {
-    model_.GenerateTestParticipants(100000);
+    model_.GenerateTestParticipants(1000);
     ApplyModel();
 }
 
 #define ParticipantControlSlots_end }
+
+// void MainWindow::on_lst_participants_currentRowChanged(int currentRow)
+// {
+//     if (currentRow < 0 || applying_model_) {
+//         return;
+//     }
+
+//     model_.SetIterator(currentRow);
+//     ApplyModel();
+// }
+
+
+// void MainWindow::on_tbl_participants_itemSelectionChanged()
+// {
+
+// }
+

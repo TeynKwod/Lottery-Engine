@@ -285,6 +285,13 @@
        </layout>
       </item>
       <item>
+       <widget class="QPushButton" name="btn_add_part">
+        <property name="text">
+         <string>Выбрать участника</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QLabel" name="lbl_random_settings">
@@ -421,6 +428,22 @@
     <property name="title">
      <string>Файл</string>
     </property>
+    <widget class="QMenu" name="menu_import">
+     <property name="title">
+      <string>Импорт</string>
+     </property>
+     <addaction name="act_imp_clipboard"/>
+     <addaction name="act_imp_file"/>
+    </widget>
+    <widget class="QMenu" name="menu_export">
+     <property name="title">
+      <string>Экспорт</string>
+     </property>
+     <addaction name="act_exp_clipboard"/>
+     <addaction name="act_exp_file"/>
+    </widget>
+    <addaction name="menu_import"/>
+    <addaction name="menu_export"/>
    </widget>
    <widget class="QMenu" name="menu_show">
     <property name="title">
@@ -452,12 +475,32 @@
     <string>Текст</string>
    </property>
   </action>
+  <action name="act_imp_clipboard">
+   <property name="text">
+    <string>Буфер обмена</string>
+   </property>
+  </action>
+  <action name="act_imp_file">
+   <property name="text">
+    <string>Файл</string>
+   </property>
+  </action>
+  <action name="act_exp_clipboard">
+   <property name="text">
+    <string>Буфер обмена</string>
+   </property>
+  </action>
+  <action name="act_exp_file">
+   <property name="text">
+    <string>Файл</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
  <buttongroups>
+  <buttongroup name="btn_group_work_parts"/>
   <buttongroup name="btn_group_search"/>
   <buttongroup name="btn_group_show_parts"/>
-  <buttongroup name="btn_group_work_parts"/>
  </buttongroups>
 </ui>

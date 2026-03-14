@@ -30,6 +30,8 @@ public:
         participants_.push_back(part);
     }
 
+    void AddActiveParticipant();
+
     std::unique_ptr<CustomRandom> GetRandomizer() {
         return std::unique_ptr<CustomRandom>(&randomizer_);
     }
@@ -42,6 +44,7 @@ public:
 
     void SetNextIterator();
     void SetPrevIterator();
+    void SetIterator(size_t);
     std::optional<std::vector<Participant>::iterator> GetIterator() {
         return iterator_;
     }

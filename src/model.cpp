@@ -81,6 +81,20 @@ Participant Model::GetParticipant(size_t index, bool need_active_part) const {
     return participants_[index];
 }
 
+void Model::AddActiveParticipant() {
+    if (!iterator_.has_value()) {
+        return;
+    }
+
+    for (Participant* part : active_part_) {
+        if (part == iterator_.value().base()) {
+            return;
+        }
+    }
+
+    active_part_.push_back(iterator_.value().base());
+}
+
 void Model::GenerateTestParticipants(int number_of_participants) {
     static const QString name_charset = "abcdefghijklmnopqrstuvwxyz", nick_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
@@ -105,6 +119,7 @@ void Model::GenerateTestParticipants(int number_of_participants) {
 
         randomizer_.ChangeLimits(0, name_charset.length() - 1);
         for (int j = 0; j < name_long; ++j) {
+
             part.name.push_back(name_charset[randomizer_.GetRandomNumber()]);
         }
 
@@ -209,25 +224,24 @@ void Model::FindParticipants(QString key, SearchType type) {
 }
 
 void Model::SetNextIterator() {
-    if (iterator_ == std::nullopt || current_active_index_ == active_part_.size() - 1) {
-        current_active_index_ = 0;
-        iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[current_active_index_]);
-        return;
+    if (!iterator_.has_value() || current_active_index_ == active_part_.size() - 1) {
+        current_active_index_ = -1;
     }
 
-    ++current_active_index_;
-    iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[current_active_index_]);
+    iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[++current_active_index_]);
 }
 
 void Model::SetPrevIterator() {
-    if (iterator_ == std::nullopt || current_active_index_ == 0) {
-        current_active_index_ = active_part_.size() - 1;
-        iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[current_active_index_]);
-        return;
+    if (!iterator_.has_value() || current_active_index_ == 0) {
+        current_active_index_ = active_part_.size();
     }
 
-    --current_active_index_;
-    iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[current_active_index_]);
+    iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[--current_active_index_]);
+}
+
+void Model::SetIterator(size_t index) {
+    qDebug() << "Set";
+    iterator_ = participants_.begin() + index;
 }
 
 QString Model::GetParticipantsString() {

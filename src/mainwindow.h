@@ -23,6 +23,10 @@ public:
 private slots:
     void on_act_show_lst_triggered();
     void on_act_show_tbl_triggered();
+    void on_act_imp_clipboard_triggered();
+    void on_act_imp_file_triggered();
+    void on_act_exp_clipboard_triggered();
+    void on_act_exp_file_triggered();
 
     void on_rbtn_active_part_clicked();
     void on_rbtn_all_part_clicked();
@@ -37,6 +41,7 @@ private slots:
     void on_btn_gen_winners_clicked();
     void on_btn_next_active_clicked();
     void on_btn_prev_active_clicked();
+    void on_btn_add_part_clicked();
     void on_btn_random_prng_clicked();
     void on_btn_random_rng_clicked();
 
@@ -45,6 +50,9 @@ private slots:
     void on_btn_from_clipboard_clicked();
     void on_btn_to_clipboard_clicked();
     void on_btn_gen_participants_clicked();
+
+    // void on_lst_participants_currentRowChanged(int currentRow);
+    // void on_tbl_participants_itemSelectionChanged();
 
 private:
     void ApplyModel();
@@ -56,4 +64,5 @@ private:
     SearchType search_type_{ SearchType::NUMBER };
     bool table_view_{ true };
     bool show_active_part_{ false };
+    bool applying_model_{ false };
 };
