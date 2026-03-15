@@ -1,7 +1,9 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include <QFileDialog>
 #include <QClipboard>
+#include <QTimer>
+
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -14,47 +16,49 @@ MainWindow::MainWindow(QWidget *parent)
     ui->lst_participants->hide();
 
     randomizer_ptr_ = model_.GetRandomizer();
+
+    connect(ui->rbtn_active_part, &QAbstractButton::clicked, this, &MainWindow::ApplyModel);
+    connect(ui->rbtn_all_part, &QAbstractButton::clicked, this, &MainWindow::ApplyModel);
+    connect(ui->le_number_winners, &QLineEdit::textEdited, this, &MainWindow::ApplyButtons);
 }
 
 MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::ApplyModel() {
+void MainWindow::ApplyButtons() {
     bool participants_filled = model_.NumberOfParticipants(false) > 0;
-    ui->btn_gen_winners->setEnabled(participants_filled);
+    ui->btn_gen_winners->setEnabled(participants_filled && ui->le_number_winners->hasAcceptableInput());
     ui->btn_search->setEnabled(participants_filled);
     ui->btn_to_clipboard->setEnabled(participants_filled);
     ui->btn_write_file->setEnabled(participants_filled);
-    ui->btn_add_part->setEnabled(participants_filled && (model_.GetIterator() != std::nullopt));
+    ui->btn_add_part->setEnabled(participants_filled && model_.GetIterator().has_value());
 
     bool active_part_filled = model_.NumberOfParticipants(true) > 0;
     ui->rbtn_active_part->setEnabled(active_part_filled);
     ui->rbtn_active_work->setEnabled(active_part_filled);
-    ui->btn_next_active->setEnabled(active_part_filled && !show_active_part_);
-    ui->btn_prev_active->setEnabled(active_part_filled && !show_active_part_);
+    ui->btn_next_active->setEnabled(active_part_filled && !ui->rbtn_active_part->isChecked());
+    ui->btn_prev_active->setEnabled(active_part_filled && !ui->rbtn_active_part->isChecked());
+}
 
-    if (table_view_) {
+void MainWindow::ApplyModel() {
+    applying_model_ = true;
+    if (ui->act_show_tbl->isChecked()) {
         ui->tbl_participants->clearContents();
-        ui->tbl_participants->setRowCount(model_.NumberOfParticipants(show_active_part_));
+        ui->tbl_participants->setRowCount(model_.NumberOfParticipants(ui->rbtn_active_part->isChecked()));
 
-        for (size_t i = 0; i < model_.NumberOfParticipants(show_active_part_); ++i) {
-            Participant part{model_.GetParticipant(i, show_active_part_)};
+        for (size_t i = 0; i < model_.NumberOfParticipants(ui->rbtn_active_part->isChecked()); ++i) {
+            Participant part{model_.GetParticipant(i, ui->rbtn_active_part->isChecked())};
             for (size_t j = 0; j < 5; ++j) {
                 ui->tbl_participants->setItem(i, j, new QTableWidgetItem(part.GetElement(j)));
             }
         }
-
-        if (model_.GetIterator().has_value()) {
-            ui->tbl_participants->selectRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
-        }
     }
     else {
-        applying_model_ = true;
         ui->lst_participants->clear();
 
-        for (size_t i = 0; i < model_.NumberOfParticipants(show_active_part_); ++i) {
-            Participant part{model_.GetParticipant(i, show_active_part_)};
+        for (size_t i = 0; i < model_.NumberOfParticipants(ui->rbtn_active_part->isChecked()); ++i) {
+            Participant part{model_.GetParticipant(i, ui->rbtn_active_part->isChecked())};
             QString part_str(QString("%1 - ID: %2 Name: %3 Surname: %4 Username: %5 Time: %6").
                 arg(QString::number(i + 1),
                 part.GetElement(0),
@@ -64,12 +68,22 @@ void MainWindow::ApplyModel() {
                 part.GetElement(4)));
             ui->lst_participants->addItem(part_str);
         }
+    }
+    applying_model_ = false;
 
-        if (model_.GetIterator().has_value()) {
-            ui->lst_participants->setCurrentRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
-        }
+    ApplyButtons();
+}
 
-        applying_model_ = false;
+void MainWindow::ApplyIterator() {
+    if (!model_.GetIterator().has_value()) {
+        return;
+    }
+
+    if (ui->act_show_tbl->isChecked()) {
+        ui->tbl_participants->selectRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
+    }
+    else {
+        ui->lst_participants->setCurrentRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
     }
 }
 
@@ -79,9 +93,10 @@ QString MainWindow::ItemsToString(QList<QTableWidgetItem*> items) {
     }
 
     QString result;
-    for (QTableWidgetItem* item : items) {
+    for (const QTableWidgetItem* item : std::as_const(items)) {
         result += model_.ValueNameByIndex(item->column()) + item->text() + " ";
     }
+    result.chop(1);
     return result;
 }
 
@@ -89,7 +104,7 @@ QString MainWindow::ItemsToString(QList<QTableWidgetItem*> items) {
 
 void MainWindow::on_act_show_lst_triggered()
 {
-    table_view_ = false;
+    ui->act_show_tbl->setChecked(false);
     ui->lst_participants->show();
     ui->tbl_participants->hide();
     ApplyModel();
@@ -98,7 +113,7 @@ void MainWindow::on_act_show_lst_triggered()
 
 void MainWindow::on_act_show_tbl_triggered()
 {
-    table_view_ = true;
+    ui->act_show_lst->setChecked(false);
     ui->lst_participants->hide();
     ui->tbl_participants->show();
     ApplyModel();
@@ -130,23 +145,6 @@ void MainWindow::on_act_exp_file_triggered()
 
 #define ActionsSlots_end }
 
-#define ParticipantShowSlots_start {
-
-void MainWindow::on_rbtn_active_part_clicked()
-{
-    show_active_part_ = true;
-    ApplyModel();
-}
-
-
-void MainWindow::on_rbtn_all_part_clicked()
-{
-    show_active_part_ = false;
-    ApplyModel();
-}
-
-#define ParticipantShowSlots_end }
-
 #define SearchSlots_start {
 
 void MainWindow::on_rbtn_number_clicked()
@@ -173,7 +171,7 @@ void MainWindow::on_rbtn_nick_clicked()
 }
 
 
-void MainWindow::on_btn_search_clicked()
+void MainWindow::on_btn_search_clicked() //Need rework
 {
     model_.FindParticipants(ui->le_search->text(), search_type_);
     ApplyModel();
@@ -185,22 +183,25 @@ void MainWindow::on_btn_copy_clicked()
     QClipboard* clip = QApplication::clipboard();
     if (!clip) {
         qWarning() << "Error in on_btn_copy_clicked: can't access to clipboard";
+        TextChanger(ui->btn_copy, "Ошибка", 1000);
         return;
     }
 
-    if (table_view_) {
+    if (ui->act_show_tbl->isChecked()) {
         clip->setText(ItemsToString(ui->tbl_participants->selectedItems()));
     }
     else if (ui->lst_participants->currentRow() >= 0) {
         clip->setText(ui->lst_participants->currentItem()->text());
     }
+
+    TextChanger(ui->btn_copy, "Скопированно", 1000);
 }
 
 #define SearchSlots_end }
 
 #define WinnersSlots_start {
 
-void MainWindow::on_btn_gen_winners_clicked()
+void MainWindow::on_btn_gen_winners_clicked() // Need add ui info
 {
     size_t number_of_winners = ui->le_number_winners->text().toULongLong();
     if (number_of_winners == 0 || number_of_winners > model_.NumberOfParticipants(false)) {
@@ -215,14 +216,14 @@ void MainWindow::on_btn_gen_winners_clicked()
 void MainWindow::on_btn_next_active_clicked()
 {
     model_.SetNextIterator();
-    ApplyModel();
+    ApplyIterator();
 }
 
 
 void MainWindow::on_btn_prev_active_clicked()
 {
     model_.SetPrevIterator();
-    ApplyModel();
+    ApplyIterator();
 }
 
 
@@ -261,7 +262,7 @@ void MainWindow::on_btn_read_file_clicked()
 }
 
 
-void MainWindow::on_btn_write_file_clicked()
+void MainWindow::on_btn_write_file_clicked() //Need add ui info
 {
     QString directory = QFileDialog::getExistingDirectory();
     if (directory.isEmpty()) {
@@ -300,7 +301,7 @@ void MainWindow::on_btn_from_clipboard_clicked()
 }
 
 
-void MainWindow::on_btn_to_clipboard_clicked()
+void MainWindow::on_btn_to_clipboard_clicked() //Need add ui info
 {
     QClipboard* clip = QApplication::clipboard();
     if (!clip) {
@@ -325,19 +326,23 @@ void MainWindow::on_btn_gen_participants_clicked()
 
 #define ParticipantControlSlots_end }
 
-// void MainWindow::on_lst_participants_currentRowChanged(int currentRow)
-// {
-//     if (currentRow < 0 || applying_model_) {
-//         return;
-//     }
+void MainWindow::on_lst_participants_currentRowChanged(int currentRow)
+{
+    if (applying_model_ || ui->rbtn_active_part->isChecked()) {
+        return;
+    }
 
-//     model_.SetIterator(currentRow);
-//     ApplyModel();
-// }
+    model_.SetIterator(currentRow);
+    ApplyButtons();
+}
 
 
-// void MainWindow::on_tbl_participants_itemSelectionChanged()
-// {
+void MainWindow::on_tbl_participants_itemSelectionChanged()
+{
+    if (applying_model_ || ui->rbtn_active_part->isChecked()) {
+        return;
+    }
 
-// }
-
+    model_.SetIterator(ui->tbl_participants->currentRow());
+    ApplyButtons();
+}

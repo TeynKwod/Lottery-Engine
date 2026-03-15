@@ -1,8 +1,10 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QTimer>
 
 #include "model.h"
+#include "qpushbutton.h"
 #include "qtablewidget.h"
 #include "enums.h"
 
@@ -28,9 +30,6 @@ private slots:
     void on_act_exp_clipboard_triggered();
     void on_act_exp_file_triggered();
 
-    void on_rbtn_active_part_clicked();
-    void on_rbtn_all_part_clicked();
-
     void on_rbtn_number_clicked();
     void on_rbtn_id_clicked();
     void on_rbtn_name_clicked();
@@ -51,18 +50,26 @@ private slots:
     void on_btn_to_clipboard_clicked();
     void on_btn_gen_participants_clicked();
 
-    // void on_lst_participants_currentRowChanged(int currentRow);
-    // void on_tbl_participants_itemSelectionChanged();
+    void on_lst_participants_currentRowChanged(int currentRow);
+    void on_tbl_participants_itemSelectionChanged();
 
 private:
+    void ApplyButtons();
     void ApplyModel();
+    void ApplyIterator();
     QString ItemsToString(QList<QTableWidgetItem*>);
+
+    void TextChanger(QPushButton* button, const QString& temp_text, int ms) {
+        QString std_text{ button->text() };
+        button->setText(temp_text);
+        QTimer::singleShot(ms, this, [=]() {
+            button->setText(std_text);
+        });
+    };
 
     Ui::MainWindow *ui;
     std::unique_ptr<CustomRandom> randomizer_ptr_;
     Model model_;
     SearchType search_type_{ SearchType::NUMBER };
-    bool table_view_{ true };
-    bool show_active_part_{ false };
     bool applying_model_{ false };
 };
