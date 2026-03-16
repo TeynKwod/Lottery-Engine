@@ -1,4 +1,4 @@
-#include <QFileDialog>
+﻿#include <QFileDialog>
 #include <QClipboard>
 #include <QTimer>
 
@@ -32,6 +32,8 @@ void MainWindow::ApplyButtons() {
     ui->btn_search->setEnabled(participants_filled);
     ui->btn_to_clipboard->setEnabled(participants_filled);
     ui->btn_write_file->setEnabled(participants_filled);
+    ui->act_exp_clipboard->setEnabled(participants_filled);
+    ui->act_exp_file->setEnabled(participants_filled);
     ui->btn_add_part->setEnabled(participants_filled && model_.GetIterator().has_value());
 
     bool active_part_filled = model_.NumberOfParticipants(true) > 0;
@@ -42,6 +44,8 @@ void MainWindow::ApplyButtons() {
 }
 
 void MainWindow::ApplyModel() {
+    ui->lbl_active_number->setText(QString::number(model_.NumberOfParticipants(true)));
+
     applying_model_ = true;
     if (ui->act_show_tbl->isChecked()) {
         ui->tbl_participants->clearContents();
@@ -171,10 +175,11 @@ void MainWindow::on_rbtn_nick_clicked()
 }
 
 
-void MainWindow::on_btn_search_clicked() //Need rework
+void MainWindow::on_btn_search_clicked()
 {
-    model_.FindParticipants(ui->le_search->text(), search_type_);
+    TextChanger(ui->btn_search, 1000, model_.FindParticipants(ui->le_search->text(), search_type_), "Поиск");
     ApplyModel();
+    ApplyIterator();
 }
 
 
@@ -183,7 +188,7 @@ void MainWindow::on_btn_copy_clicked()
     QClipboard* clip = QApplication::clipboard();
     if (!clip) {
         qWarning() << "Error in on_btn_copy_clicked: can't access to clipboard";
-        TextChanger(ui->btn_copy, "Ошибка", 1000);
+        TextChanger(ui->btn_copy, 1000, "Ошибка", "Скопировать");
         return;
     }
 
@@ -194,21 +199,22 @@ void MainWindow::on_btn_copy_clicked()
         clip->setText(ui->lst_participants->currentItem()->text());
     }
 
-    TextChanger(ui->btn_copy, "Скопированно", 1000);
+    TextChanger(ui->btn_copy, 1000, "Скопированно", "Скопировать");
 }
 
 #define SearchSlots_end }
 
 #define WinnersSlots_start {
 
-void MainWindow::on_btn_gen_winners_clicked() // Need add ui info
+void MainWindow::on_btn_gen_winners_clicked()
 {
     size_t number_of_winners = ui->le_number_winners->text().toULongLong();
     if (number_of_winners == 0 || number_of_winners > model_.NumberOfParticipants(false)) {
-        qWarning() << "Error in on_btn_gen_winners_clicked: invalid number of winners";
+        TextChanger(ui->btn_gen_winners, 1000, "Неверное кол-во участников", "Выбрать победителей");
         return;
     }
     model_.GenerateWinners(number_of_winners);
+    TextChanger(ui->lbl_info, 5000, "Выбрано " + QString::number(number_of_winners) + " новых участников");
     ApplyModel();
 }
 
@@ -229,7 +235,7 @@ void MainWindow::on_btn_prev_active_clicked()
 
 void MainWindow::on_btn_add_part_clicked()
 {
-    model_.AddActiveParticipant();
+    TextChanger(ui->lbl_info, 5000, model_.AddActiveParticipant());
     ApplyModel();
 }
 
@@ -237,12 +243,14 @@ void MainWindow::on_btn_add_part_clicked()
 void MainWindow::on_btn_random_prng_clicked()
 {
     randomizer_ptr_->SetTimeBasedSeed();
+    TextChanger(ui->lbl_info, 5000, "Генератор пересобран на основе текущего времени");
 }
 
 
 void MainWindow::on_btn_random_rng_clicked()
 {
     randomizer_ptr_->SetHardwareBasedSeed();
+    TextChanger(ui->lbl_info, 5000, "Генератор пересобран на основе аппаратного генератора");
 }
 
 #define WinnersSlots_end }
@@ -253,7 +261,7 @@ void MainWindow::on_btn_read_file_clicked()
 {
     QString file_name = QFileDialog::getOpenFileName();
     if (file_name.isEmpty()) {
-        qInfo() << "on_btn_read_file_clicked: no file name";
+        TextChanger(ui->lbl_info, 5000, "Файл не выбран"); // Error info
         return;
     }
 
@@ -262,18 +270,19 @@ void MainWindow::on_btn_read_file_clicked()
 }
 
 
-void MainWindow::on_btn_write_file_clicked() //Need add ui info
+void MainWindow::on_btn_write_file_clicked()
 {
     QString directory = QFileDialog::getExistingDirectory();
     if (directory.isEmpty()) {
-        qInfo() << "on_btn_write_file_clicked: no directory";
+        TextChanger(ui->lbl_info, 5000, "Директория не выбрана"); // Error info
         return;
     }
 
     directory += "/Participants.txt";
     QFile file(directory);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        qWarning() << "Error in on_btn_write_file_clicked: can't open file";
+        TextChanger(ui->lbl_info, 5000, "Не получилось создать и открыть файл для записи"); // Error info
+        return;
     }
 
     QTextStream output(&file);
@@ -285,6 +294,8 @@ void MainWindow::on_btn_write_file_clicked() //Need add ui info
     }
 
     file.close();
+
+    TextChanger(ui->lbl_info, 5000, "Создан файл Participants.txt в выбранной директории");
 }
 
 
@@ -301,11 +312,11 @@ void MainWindow::on_btn_from_clipboard_clicked()
 }
 
 
-void MainWindow::on_btn_to_clipboard_clicked() //Need add ui info
+void MainWindow::on_btn_to_clipboard_clicked()
 {
     QClipboard* clip = QApplication::clipboard();
     if (!clip) {
-        qWarning() << "Error in on_btn_to_clipboard_clicked: can't access to clipboard";
+        TextChanger(ui->btn_to_clipboard, 1000, "Нет доступа к буферу обмена", "Экспорт в буфер обмена"); // Error info
         return;
     }
 
@@ -315,6 +326,8 @@ void MainWindow::on_btn_to_clipboard_clicked() //Need add ui info
     else {
         clip->setText(model_.GetActiveParticipantsString());
     }
+
+    TextChanger(ui->lbl_info, 5000, "Участники скопированны в буфер обмена");
 }
 
 

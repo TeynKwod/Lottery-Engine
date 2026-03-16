@@ -2,10 +2,9 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QTableWidget>
 
 #include "model.h"
-#include "qpushbutton.h"
-#include "qtablewidget.h"
 #include "enums.h"
 
 QT_BEGIN_NAMESPACE
@@ -59,11 +58,11 @@ private:
     void ApplyIterator();
     QString ItemsToString(QList<QTableWidgetItem*>);
 
-    void TextChanger(QPushButton* button, const QString& temp_text, int ms) {
-        QString std_text{ button->text() };
-        button->setText(temp_text);
+    template<class T>
+    void TextChanger(T* widget, int ms, const QString& temp_text, const QString& std_text = "") {
+        widget->setText(temp_text);
         QTimer::singleShot(ms, this, [=]() {
-            button->setText(std_text);
+            widget->setText(std_text);
         });
     };
 

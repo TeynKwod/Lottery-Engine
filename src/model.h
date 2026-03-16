@@ -30,17 +30,17 @@ public:
         participants_.push_back(part);
     }
 
-    void AddActiveParticipant();
+    QString AddActiveParticipant();
 
     std::unique_ptr<CustomRandom> GetRandomizer() {
         return std::unique_ptr<CustomRandom>(&randomizer_);
     }
 
     void GenerateTestParticipants(int);
-    void ReadFromFile(QString);
+    void ReadFromFile(const QString&);
     std::vector<Participant*> CopyParticipantPtr();
     void GenerateWinners(size_t);
-    void FindParticipants(QString, SearchType);
+    QString FindParticipants(const QString&, SearchType);
 
     void SetNextIterator();
     void SetPrevIterator();

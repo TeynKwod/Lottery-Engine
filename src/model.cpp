@@ -67,6 +67,7 @@ QString Model::ValueNameByIndex(int index) const {
     }
 }
 
+// True for active participants, false for all
 size_t Model::NumberOfParticipants(bool need_active_part) const {
     if (need_active_part) {
         return active_part_.size();
@@ -74,6 +75,7 @@ size_t Model::NumberOfParticipants(bool need_active_part) const {
     return participants_.size();
 }
 
+// True for active participants, false for all
 Participant Model::GetParticipant(size_t index, bool need_active_part) const {
     if (need_active_part) {
         return *active_part_[index];
@@ -81,18 +83,19 @@ Participant Model::GetParticipant(size_t index, bool need_active_part) const {
     return participants_[index];
 }
 
-void Model::AddActiveParticipant() {
+QString Model::AddActiveParticipant() {
     if (!iterator_.has_value()) {
-        return;
+        return "Нет выделенного участника";
     }
 
     for (Participant* part : active_part_) {
         if (part == iterator_.value().base()) {
-            return;
+            return "Участник уже в списке";
         }
     }
 
     active_part_.push_back(iterator_.value().base());
+    return "Участник добавлен";
 }
 
 void Model::GenerateTestParticipants(int number_of_participants) {
@@ -136,7 +139,7 @@ void Model::GenerateTestParticipants(int number_of_participants) {
     }
 }
 
-void Model::ReadFromFile(QString file_name){
+void Model::ReadFromFile(const QString& file_name){
     iterator_ = std::nullopt;
     participants_.clear();
     active_part_.clear();
@@ -182,43 +185,72 @@ void Model::GenerateWinners(size_t number_of_winners) {
     }
 }
 
-void Model::FindParticipants(QString key, SearchType type) {
-    iterator_ = std::nullopt;
-    active_part_.clear();
-
+QString Model::FindParticipants(const QString& key, SearchType type) {
     switch (type) {
     case SearchType::NUMBER:
         if (size_t index = key.toULongLong(); index < 1 || index > participants_.size()) {
-            qWarning() << "Error in FindParticipants: invalid index";
-            return;
+            return "Неверный индекс";
         }
         else {
-            active_part_.push_back(&participants_[index - 1]);
+            iterator_ = participants_.begin() + (index - 1);
+            return "Участник найден";
         }
         break;
     case SearchType::ID:
-        for (Participant& elem : participants_) {
-            if (elem.id == key) {
-                active_part_.push_back(&elem);
-            }
+    {
+        auto comparator = [key](const Participant& part) -> bool {
+            return part.id == key;
+        };
+        if (auto iter = std::find_if(participants_.begin(), participants_.end(), comparator); iter == participants_.end()) {
+            return "Участник не найден";
+        }
+        else {
+            iterator_ = iter;
+            return "Участник найден";
         }
         break;
+    }
     case SearchType::NAME:
+        iterator_ = std::nullopt;
+        active_part_.clear();
+
         for (Participant& elem : participants_) {
             if (elem.name.contains(key) || elem.surname.contains(key)) {
                 active_part_.push_back(&elem);
             }
         }
+
+        if (active_part_.empty()) {
+            return "Участники не найдены";
+        }
+        else {
+            iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[0]);
+            current_active_index_ = 0;
+            return "Участники найдены";
+        }
         break;
     case SearchType::USERNAME:
+        iterator_ = std::nullopt;
+        active_part_.clear();
+
         for (Participant& elem : participants_) {
             if (elem.nick == key) {
                 active_part_.push_back(&elem);
             }
         }
+
+        if (active_part_.empty()) {
+            return "Участники не найдены";
+        }
+        else {
+            iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[0]);
+            current_active_index_ = 0;
+            return "Участники найдены";
+        }
         break;
     default:
         qWarning() << "Error in FindParticipants: unknown SearchType";
+        return "Ошибка";
         break;
     }
 }
@@ -240,7 +272,6 @@ void Model::SetPrevIterator() {
 }
 
 void Model::SetIterator(size_t index) {
-    qDebug() << "Set";
     iterator_ = participants_.begin() + index;
 }
 

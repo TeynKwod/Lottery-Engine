@@ -286,8 +286,45 @@
       </item>
       <item>
        <widget class="QPushButton" name="btn_add_part">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Выбрать участника</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QLabel" name="lbl_active_info">
+          <property name="text">
+           <string>Выбранных участников:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbl_active_number">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>0</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="lbl_info">
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>
@@ -486,11 +523,17 @@
    </property>
   </action>
   <action name="act_exp_clipboard">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Буфер обмена</string>
    </property>
   </action>
   <action name="act_exp_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Файл</string>
    </property>
@@ -500,7 +543,7 @@
  <connections/>
  <buttongroups>
   <buttongroup name="btn_group_search"/>
-  <buttongroup name="btn_group_show_parts"/>
   <buttongroup name="btn_group_work_parts"/>
+  <buttongroup name="btn_group_show_parts"/>
  </buttongroups>
 </ui>
