@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    bool limits_set_{ false };
     std::mt19937 generator_;
     std::uniform_int_distribution<int> distribution_;
+    bool limits_set_{ false };
 };

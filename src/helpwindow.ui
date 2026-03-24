@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HelpWindow</class>
+ <widget class="QDialog" name="HelpWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>492</width>
+    <height>280</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lbl_help">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Приложение создано для случайного выбора участников из розыгрышей в Telegram.&lt;/p&gt;&lt;p&gt;Скачайте .csv файл со списком участников из бота и импортируйте в приложение.&lt;br/&gt;Далее вы можете сгенерировать победителей с помощью встроенного генератора или добавлять вручную по номеру, сгенерированному random.org.&lt;/p&gt;&lt;p&gt;Встроенный генератор использует вихрь Мерсена для генерации псевдослучайных чисел. Зерном для генератора может выступать текущее время (рекомендуется), что даёт достаточную непредсказуемость результата, либо аппаратно сгенерированное случайное число. Последний вариант ненадёжен, так как его реализация зависит от операционной системы и конкретного железа, и в общем случае предугадать, насколько результат случаен, невозможно.&lt;br/&gt;&lt;br/&gt;После выбора участников вы можете сохранить их в буфер обмена либо в файл в читаемом .txt формате&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btn_close">
+     <property name="text">
+      <string>Закрыть</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

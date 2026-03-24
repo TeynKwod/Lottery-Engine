@@ -3,9 +3,13 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QTableWidget>
+#include <QLabel>
 
+#include "creatorwindow.h"
+#include "helpwindow.h"
 #include "model.h"
 #include "enums.h"
+#include "textchanger.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,6 +32,8 @@ private slots:
     void on_act_imp_file_triggered();
     void on_act_exp_clipboard_triggered();
     void on_act_exp_file_triggered();
+    void on_act_creator_triggered();
+    void on_act_help_triggered();
 
     void on_rbtn_number_clicked();
     void on_rbtn_id_clicked();
@@ -40,6 +46,7 @@ private slots:
     void on_btn_next_active_clicked();
     void on_btn_prev_active_clicked();
     void on_btn_add_part_clicked();
+    void on_btn_delete_part_clicked();
     void on_btn_random_prng_clicked();
     void on_btn_random_rng_clicked();
 
@@ -58,17 +65,13 @@ private:
     void ApplyIterator();
     QString ItemsToString(QList<QTableWidgetItem*>);
 
-    template<class T>
-    void TextChanger(T* widget, int ms, const QString& temp_text, const QString& std_text = "") {
-        widget->setText(temp_text);
-        QTimer::singleShot(ms, this, [=]() {
-            widget->setText(std_text);
-        });
-    };
-
     Ui::MainWindow *ui;
+    HelpWindow help_;
+    CreatorWindow creator_;
     std::unique_ptr<CustomRandom> randomizer_ptr_;
     Model model_;
     SearchType search_type_{ SearchType::NUMBER };
+    TextChanger<QPushButton> btn_textchanger_;
+    TextChanger<QLabel> lbl_textchanger_;
     bool applying_model_{ false };
 };

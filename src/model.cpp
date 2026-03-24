@@ -98,6 +98,24 @@ QString Model::AddActiveParticipant() {
     return "Участник добавлен";
 }
 
+QString Model::DeleteActiveParticipant() {
+    if (!iterator_.has_value()) {
+        return "Нет выделенного участника";
+    }
+
+    for (size_t i = 0; i < active_part_.size(); ++i) {
+        if (active_part_[i] == iterator_.value().base()) {
+            active_part_.erase(active_part_.begin() + i);
+            if (current_active_index_ == active_part_.size()) {
+                --current_active_index_;
+            }
+            return "Участник удалён";
+        }
+    }
+
+    return "Участник не выбран";
+}
+
 void Model::GenerateTestParticipants(int number_of_participants) {
     static const QString name_charset = "abcdefghijklmnopqrstuvwxyz", nick_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
@@ -143,7 +161,7 @@ void Model::ReadFromFile(const QString& file_name){
     iterator_ = std::nullopt;
     participants_.clear();
     active_part_.clear();
-    std::ifstream input{file_name.toStdString()};
+    std::ifstream input{ file_name.toStdString() };
     std::string readed_line;
 
     if (!input.is_open()) {
@@ -256,7 +274,7 @@ QString Model::FindParticipants(const QString& key, SearchType type) {
 }
 
 void Model::SetNextIterator() {
-    if (!iterator_.has_value() || current_active_index_ == active_part_.size() - 1) {
+    if (!iterator_.has_value() || current_active_index_ >= active_part_.size() - 1) {
         current_active_index_ = -1;
     }
 
@@ -271,8 +289,24 @@ void Model::SetPrevIterator() {
     iterator_ = participants_.begin() + std::distance(participants_.data(), active_part_[--current_active_index_]);
 }
 
-void Model::SetIterator(size_t index) {
+void Model::SetIterator(size_t index, bool need_active_part) {
+    if (need_active_part) {
+        current_active_index_ = index;
+
+        auto comparator = [&](const Participant& part) -> bool {
+            return &part == active_part_[current_active_index_];
+        };
+
+        iterator_ = std::find_if(participants_.begin(), participants_.end(), comparator);
+        return;
+    }
+
     iterator_ = participants_.begin() + index;
+    for (size_t i = 0; i < active_part_.size(); ++i) {
+        if (active_part_[i] == iterator_.value().base()) {
+            current_active_index_ = i;
+        }
+    }
 }
 
 QString Model::GetParticipantsString() {

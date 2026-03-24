@@ -9,17 +9,24 @@ CONFIG += c++20
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    creatorwindow.cpp \
+    helpwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     model.cpp
 
 HEADERS += \
+    creatorwindow.h \
     customrandom.h \
     enums.h \
+    helpwindow.h \
     mainwindow.h \
-    model.h
+    model.h \
+    textchanger.h
 
 FORMS += \
+    creatorwindow.ui \
+    helpwindow.ui \
     mainwindow.ui
 
 # Default rules for deployment.

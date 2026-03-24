@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>979</width>
-    <height>670</height>
+    <width>1010</width>
+    <height>703</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -290,7 +290,17 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Выбрать участника</string>
+         <string>Добавить участника</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btn_delete_part">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Удалить участника</string>
         </property>
        </widget>
       </item>
@@ -323,8 +333,23 @@
       </item>
       <item>
        <widget class="QLabel" name="lbl_info">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>35</height>
+         </size>
+        </property>
         <property name="text">
          <string/>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -457,7 +482,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>979</width>
+     <width>1010</width>
      <height>21</height>
     </rect>
    </property>
@@ -489,8 +514,16 @@
     <addaction name="act_show_tbl"/>
     <addaction name="act_show_lst"/>
    </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Помощь</string>
+    </property>
+    <addaction name="act_help"/>
+    <addaction name="act_creator"/>
+   </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_show"/>
+   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="act_show_tbl">
@@ -538,12 +571,22 @@
     <string>Файл</string>
    </property>
   </action>
+  <action name="act_help">
+   <property name="text">
+    <string>Инструкция</string>
+   </property>
+  </action>
+  <action name="act_creator">
+   <property name="text">
+    <string>Контакты</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btn_group_search"/>
-  <buttongroup name="btn_group_work_parts"/>
   <buttongroup name="btn_group_show_parts"/>
+  <buttongroup name="btn_group_work_parts"/>
+  <buttongroup name="btn_group_search"/>
  </buttongroups>
 </ui>

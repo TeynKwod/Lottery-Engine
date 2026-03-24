@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QMainWindow>
 #include <chrono>
 #include <optional>
 
@@ -31,6 +30,7 @@ public:
     }
 
     QString AddActiveParticipant();
+    QString DeleteActiveParticipant();
 
     std::unique_ptr<CustomRandom> GetRandomizer() {
         return std::unique_ptr<CustomRandom>(&randomizer_);
@@ -44,12 +44,15 @@ public:
 
     void SetNextIterator();
     void SetPrevIterator();
-    void SetIterator(size_t);
+    void SetIterator(size_t, bool);
     std::optional<std::vector<Participant>::iterator> GetIterator() {
         return iterator_;
     }
     std::vector<Participant>::iterator GetBeginIterator() {
         return participants_.begin();
+    }
+    size_t GetCurrentActiveIndex() {
+        return current_active_index_;
     }
 
     QString GetParticipantsString();

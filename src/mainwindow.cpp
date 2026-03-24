@@ -1,14 +1,17 @@
-﻿#include <QFileDialog>
+#include <QFileDialog>
 #include <QClipboard>
 #include <QTimer>
 
 #include "mainwindow.h"
+#include "helpwindow.h"
 #include "ui_mainwindow.h"
+#include "textchanger.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow) {
     ui->setupUi(this);
+    this->setWindowTitle("Lottery Engine");
 
     QRegularExpression numbers("^\\d+$");
     ui->le_number_winners->setValidator(new QRegularExpressionValidator(numbers, this));
@@ -39,8 +42,9 @@ void MainWindow::ApplyButtons() {
     bool active_part_filled = model_.NumberOfParticipants(true) > 0;
     ui->rbtn_active_part->setEnabled(active_part_filled);
     ui->rbtn_active_work->setEnabled(active_part_filled);
-    ui->btn_next_active->setEnabled(active_part_filled && !ui->rbtn_active_part->isChecked());
-    ui->btn_prev_active->setEnabled(active_part_filled && !ui->rbtn_active_part->isChecked());
+    ui->btn_next_active->setEnabled(active_part_filled);
+    ui->btn_prev_active->setEnabled(active_part_filled);
+    ui->btn_delete_part->setEnabled(active_part_filled);
 }
 
 void MainWindow::ApplyModel() {
@@ -75,6 +79,11 @@ void MainWindow::ApplyModel() {
     }
     applying_model_ = false;
 
+    if (ui->rbtn_active_part->isChecked() && model_.NumberOfParticipants(true) == 0) {
+        ui->rbtn_all_part->setChecked(true);
+        ApplyModel();
+    }
+
     ApplyButtons();
 }
 
@@ -83,11 +92,21 @@ void MainWindow::ApplyIterator() {
         return;
     }
 
-    if (ui->act_show_tbl->isChecked()) {
-        ui->tbl_participants->selectRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
+    if (ui->rbtn_active_part->isChecked()) {
+        if (ui->act_show_tbl->isChecked()) {
+            ui->tbl_participants->selectRow(model_.GetCurrentActiveIndex());
+        }
+        else {
+            ui->lst_participants->setCurrentRow(model_.GetCurrentActiveIndex());
+        }
     }
     else {
-        ui->lst_participants->setCurrentRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
+        if (ui->act_show_tbl->isChecked()) {
+            ui->tbl_participants->selectRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
+        }
+        else {
+            ui->lst_participants->setCurrentRow(std::distance(model_.GetBeginIterator(), model_.GetIterator().value()));
+        }
     }
 }
 
@@ -147,6 +166,18 @@ void MainWindow::on_act_exp_file_triggered()
     on_btn_write_file_clicked();
 }
 
+
+void MainWindow::on_act_creator_triggered()
+{
+    creator_.show();
+}
+
+
+void MainWindow::on_act_help_triggered()
+{
+    help_.show();
+}
+
 #define ActionsSlots_end }
 
 #define SearchSlots_start {
@@ -177,7 +208,7 @@ void MainWindow::on_rbtn_nick_clicked()
 
 void MainWindow::on_btn_search_clicked()
 {
-    TextChanger(ui->btn_search, 1000, model_.FindParticipants(ui->le_search->text(), search_type_), "Поиск");
+    btn_textchanger_(ui->btn_search, 1000, model_.FindParticipants(ui->le_search->text(), search_type_));
     ApplyModel();
     ApplyIterator();
 }
@@ -188,7 +219,7 @@ void MainWindow::on_btn_copy_clicked()
     QClipboard* clip = QApplication::clipboard();
     if (!clip) {
         qWarning() << "Error in on_btn_copy_clicked: can't access to clipboard";
-        TextChanger(ui->btn_copy, 1000, "Ошибка", "Скопировать");
+        btn_textchanger_(ui->btn_copy, 1000, "Ошибка");
         return;
     }
 
@@ -199,7 +230,7 @@ void MainWindow::on_btn_copy_clicked()
         clip->setText(ui->lst_participants->currentItem()->text());
     }
 
-    TextChanger(ui->btn_copy, 1000, "Скопированно", "Скопировать");
+    btn_textchanger_(ui->btn_copy, 1000, "Скопированно");
 }
 
 #define SearchSlots_end }
@@ -210,11 +241,11 @@ void MainWindow::on_btn_gen_winners_clicked()
 {
     size_t number_of_winners = ui->le_number_winners->text().toULongLong();
     if (number_of_winners == 0 || number_of_winners > model_.NumberOfParticipants(false)) {
-        TextChanger(ui->btn_gen_winners, 1000, "Неверное кол-во участников", "Выбрать победителей");
+        btn_textchanger_(ui->btn_gen_winners, 1000, "Неверное кол-во участников");
         return;
     }
     model_.GenerateWinners(number_of_winners);
-    TextChanger(ui->lbl_info, 5000, "Выбрано " + QString::number(number_of_winners) + " новых участников");
+    lbl_textchanger_(ui->lbl_info, 5000, "Выбрано " + QString::number(number_of_winners) + " новых участников");
     ApplyModel();
 }
 
@@ -235,22 +266,30 @@ void MainWindow::on_btn_prev_active_clicked()
 
 void MainWindow::on_btn_add_part_clicked()
 {
-    TextChanger(ui->lbl_info, 5000, model_.AddActiveParticipant());
+    lbl_textchanger_(ui->lbl_info, 5000, model_.AddActiveParticipant());
     ApplyModel();
+}
+
+
+void MainWindow::on_btn_delete_part_clicked()
+{
+    lbl_textchanger_(ui->lbl_info, 5000, model_.DeleteActiveParticipant());
+    ApplyModel();
+    ApplyIterator();
 }
 
 
 void MainWindow::on_btn_random_prng_clicked()
 {
     randomizer_ptr_->SetTimeBasedSeed();
-    TextChanger(ui->lbl_info, 5000, "Генератор пересобран на основе текущего времени");
+    lbl_textchanger_(ui->lbl_info, 5000, "Генератор пересобран на основе текущего времени");
 }
 
 
 void MainWindow::on_btn_random_rng_clicked()
 {
     randomizer_ptr_->SetHardwareBasedSeed();
-    TextChanger(ui->lbl_info, 5000, "Генератор пересобран на основе аппаратного генератора");
+    lbl_textchanger_(ui->lbl_info, 5000, "Генератор пересобран на основе аппаратного генератора");
 }
 
 #define WinnersSlots_end }
@@ -261,7 +300,7 @@ void MainWindow::on_btn_read_file_clicked()
 {
     QString file_name = QFileDialog::getOpenFileName();
     if (file_name.isEmpty()) {
-        TextChanger(ui->lbl_info, 5000, "Файл не выбран"); // Error info
+        lbl_textchanger_(ui->lbl_info, 5000, "Файл не выбран"); // Error info
         return;
     }
 
@@ -272,16 +311,15 @@ void MainWindow::on_btn_read_file_clicked()
 
 void MainWindow::on_btn_write_file_clicked()
 {
-    QString directory = QFileDialog::getExistingDirectory();
-    if (directory.isEmpty()) {
-        TextChanger(ui->lbl_info, 5000, "Директория не выбрана"); // Error info
+    QString file_name = QFileDialog::getSaveFileName(this, "Сохранить как...", "Participants.txt");
+    if (file_name.isEmpty()) {
+        lbl_textchanger_(ui->lbl_info, 5000, "Директория не выбрана"); // Error info
         return;
     }
 
-    directory += "/Participants.txt";
-    QFile file(directory);
+    QFile file(file_name);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        TextChanger(ui->lbl_info, 5000, "Не получилось создать и открыть файл для записи"); // Error info
+        lbl_textchanger_(ui->lbl_info, 5000, "Не получилось создать и открыть файл для записи"); // Error info
         return;
     }
 
@@ -295,7 +333,7 @@ void MainWindow::on_btn_write_file_clicked()
 
     file.close();
 
-    TextChanger(ui->lbl_info, 5000, "Создан файл Participants.txt в выбранной директории");
+    lbl_textchanger_(ui->lbl_info, 5000, "Создан файл " + file.fileName() + " в выбранной директории");
 }
 
 
@@ -316,7 +354,7 @@ void MainWindow::on_btn_to_clipboard_clicked()
 {
     QClipboard* clip = QApplication::clipboard();
     if (!clip) {
-        TextChanger(ui->btn_to_clipboard, 1000, "Нет доступа к буферу обмена", "Экспорт в буфер обмена"); // Error info
+        btn_textchanger_(ui->btn_to_clipboard, 1000, "Нет доступа к буферу обмена"); // Error info
         return;
     }
 
@@ -327,7 +365,7 @@ void MainWindow::on_btn_to_clipboard_clicked()
         clip->setText(model_.GetActiveParticipantsString());
     }
 
-    TextChanger(ui->lbl_info, 5000, "Участники скопированны в буфер обмена");
+    lbl_textchanger_(ui->lbl_info, 5000, "Участники скопированны в буфер обмена");
 }
 
 
@@ -339,23 +377,27 @@ void MainWindow::on_btn_gen_participants_clicked()
 
 #define ParticipantControlSlots_end }
 
+#define ChoosingParticipantSlots_start {
+
 void MainWindow::on_lst_participants_currentRowChanged(int currentRow)
 {
-    if (applying_model_ || ui->rbtn_active_part->isChecked()) {
+    if (applying_model_) {
         return;
     }
 
-    model_.SetIterator(currentRow);
+    model_.SetIterator(currentRow, ui->rbtn_active_part->isChecked());
     ApplyButtons();
 }
 
 
 void MainWindow::on_tbl_participants_itemSelectionChanged()
 {
-    if (applying_model_ || ui->rbtn_active_part->isChecked()) {
+    if (applying_model_) {
         return;
     }
 
-    model_.SetIterator(ui->tbl_participants->currentRow());
+    model_.SetIterator(ui->tbl_participants->currentRow(), ui->rbtn_active_part->isChecked());
     ApplyButtons();
 }
+
+#define ChoosingParticipantSlots_end }
